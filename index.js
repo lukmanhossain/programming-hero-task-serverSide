@@ -26,6 +26,7 @@ async function run() {
     app.post("/blogs", async (req, res) => {
       const blog = req.body;
       const result = await blogsCollection.insertOne(blog);
+      console.log(req.body, "hello")
       res.json(result);
     });
 
@@ -60,9 +61,25 @@ async function run() {
     // GET API
     app.get("/blogs", async (req, res) => {
       const cursor = blogsCollection.find({});
-      const blog = await cursor.toArray();
-      res.json(blog);
+      const count = await cursor.count();
+      const page = req.query.page;
+      const size = parseInt(req.query.size);
+      let blogs;
+      // console.log(req.query);
+      if (page) {
+        blogs = await cursor
+          .skip(page * size)
+          .limit(size)
+          .toArray();
+      } else {
+        blogs = await cursor.toArray();
+      }
+      res.json({
+        count,
+        blogs,
+      });
     });
+    
     // get single blog
     app.get("/blogs/:id", async (req, res) => {
       const id = req.params.id;
@@ -70,6 +87,16 @@ async function run() {
       const blog = await blogsCollection.findOne(query);
       res.json(blog);
     });
+
+    // GET Find single data deatails  Document Client site read code//
+
+  // //find  a single  order data//
+  // app.get("/mypost/:email", async (req, res) => {
+  //   const result = await blogsCollection.find({
+  //     email: req.params.email
+  //   }).toArray();
+  //   res.send(result);
+  // });
 
     // UPDATE API
     app.put("/blogs/:id", async (req, res) => {
